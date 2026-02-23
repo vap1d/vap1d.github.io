@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>LibertyAI</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <main class="chat-app" aria-label="AI chat application">
+            <div class="panel" role="region" aria-labelledby="chat-heading">
+                <h1 id="chat-heading" style="margin:0 0 8px 0;font-size:36px;text-align: center">LibertyAI</h1>
+                <div id="messages" class="messages scrollbar-hide" role="log" aria-live="polite" tabindex="0">
+                    <!-- messages go here -->
+                </div>
+
+                <form id="chat-form" class="input-row" aria-label="Send a message" novalidate>
+                    <textarea id="input" name="message" placeholder="Type a message…" rows="1"></textarea>
+                    <button id="send" type="submit">Send</button>
+                </form>
+            </div>
+        </main>
+
+        <script>
+            const form = document.getElementById('chat-form');
+            const input = document.getElementById('input');
+            const messages = document.getElementById('messages');
+            const sendBtn = document.getElementById('send');
+
+            function createMessage(text, who){
+                const el = document.createElement('div');
+                el.className = 'msg ' + who;
+                const meta = document.createElement('div');
+                meta.className = 'meta';
+                meta.textContent = who === 'bot' ? 'Bot' : 'You';
+                el.appendChild(meta);
+
+                const content = document.createElement('div');
+                content.className = 'content';
+                // use textContent to avoid injecting HTML, preserve newlines via CSS white-space: pre-wrap
+                content.textContent = text;
+                el.appendChild(content);
+                return el;
+            }
+
+            function setTyping(on){
+                if(on){
+                    const t = createMessage('Typing…', 'bot');
+                    t.classList.add('typing');
+                    t.dataset.typing = '1';
+                    messages.appendChild(t);
+                    scrollToBottom();
+                } else {
+                    const t = messages.querySelector('[data-typing="1"]');
+                    if(t) t.remove();
+                }
+            }
+
+            function scrollToBottom(){
+                requestAnimationFrame(() => {
+                    messages.scrollTop = messages.scrollHeight;
+                });
+            }
+
+            // auto-resize textarea
+            function resizeInput(){
+                input.style.height = 'auto';
+                input.style.height = Math.min(input.scrollHeight, 160) + 'px';
+            }
+            input.addEventListener('input', resizeInput);
+            resizeInput();
+
+            async function sendToAI(messageText){
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: messageText })
+                });
+                if(!res.ok) throw new Error('AI API error');
+                const data = await res.json();
+                return data.reply ?? '';
+            }
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const text = input.value.trim();
+                if(!text) return;
+                messages.appendChild(createMessage(text, 'user'));
+                input.value = '';
+                resizeInput();
+                input.focus();
+                sendBtn.disabled = true;
+                scrollToBottom();
+
+                setTyping(true);
+
+                try {
+                    const reply = await sendToAI(text);
+                    setTyping(false);
+                    messages.appendChild(createMessage(reply || 'No reply', 'bot'));
+                } catch (err) {
+                    setTyping(false);
+                    messages.appendChild(createMessage('Sorry, something went wrong.', 'bot'));
+                    console.error(err);
+                } finally {
+                    sendBtn.disabled = false;
+                    scrollToBottom();
+                }
+            });
+
+            // Ctrl/Cmd+Enter to submit, Enter to newline
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    form.requestSubmit();
+                }
+            });
+        </script>
+    </body>
+</html>
