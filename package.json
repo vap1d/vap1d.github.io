@@ -1,0 +1,27 @@
+{
+  "name": "usa-project",
+  "version": "1.0.0",
+  "description": "https://github.com/vap1d/vap1d.github.io/edit/main/README.md",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vap1d/vap1d.github.io.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/vap1d/vap1d.github.io/issues"
+  },
+  "homepage": "https://github.com/vap1d/vap1d.github.io#readme",
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "node-fetch": "^2.7.0"
+  }
+}
