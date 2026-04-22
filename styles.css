@@ -93,7 +93,7 @@ html, body {
 .msg.user .content {
     background: linear-gradient(180deg, var(--user), #89092b);
     border-bottom-right-radius: 4px;
-    color: #062023;
+    color: #e6eef6;
 }
 
 .msg.bot {
